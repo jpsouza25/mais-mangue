@@ -1,0 +1,19 @@
+# Banco de dados
+database.db
+
+# Cache Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Ambiente virtual
+venv/
+.venv/
+env/
+
+# Variáveis de ambiente
+.env
+
+# IDEs
+.vscode/
+.idea/

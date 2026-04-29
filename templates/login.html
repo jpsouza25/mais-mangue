@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UserSystem — Acesso</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    overflow-x: hidden;
+  }
+
+  /* ── Animated orbs ── */
+  .orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(90px);
+    opacity: .25;
+    animation: floatOrb 10s ease-in-out infinite;
+    pointer-events: none;
+  }
+  .o1 { width:500px;height:500px;background:#6c63ff;top:-120px;left:-120px;animation-delay:0s; }
+  .o2 { width:350px;height:350px;background:#ff6b9d;bottom:-80px;right:-80px;animation-delay:3s; }
+  .o3 { width:250px;height:250px;background:#43e0d3;top:40%;left:55%;animation-delay:6s; }
+
+  @keyframes floatOrb {
+    0%,100% { transform: translateY(0) scale(1); }
+    50%      { transform: translateY(-40px) scale(1.08); }
+  }
+
+  /* ── Wrapper card ── */
+  .auth-card {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    max-width: 460px;
+    background: rgba(255,255,255,.10);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255,255,255,.22);
+    border-radius: 28px;
+    padding: 44px 40px;
+    box-shadow: 0 32px 80px rgba(0,0,0,.45);
+    animation: cardIn .55s cubic-bezier(.22,1,.36,1);
+  }
+  @media(max-width:500px){ .auth-card{ padding:32px 22px; border-radius:20px; } }
+  @keyframes cardIn {
+    from { opacity:0; transform:translateY(40px) scale(.97); }
+    to   { opacity:1; transform:translateY(0) scale(1); }
+  }
+
+  /* ── Brand ── */
+  .brand-icon {
+    width:64px;height:64px;
+    background: linear-gradient(135deg,#fff,rgba(255,255,255,.75));
+    border-radius:18px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:30px;color:#6c63ff;
+    margin:0 auto 14px;
+    box-shadow:0 8px 24px rgba(0,0,0,.3);
+  }
+  .brand-title { color:#fff; font-weight:800; font-size:1.6rem; letter-spacing:-.5px; }
+  .brand-sub   { color:rgba(255,255,255,.65); font-size:.88rem; }
+
+  /* ── Panel switch ── */
+  .form-panel { display:none; }
+  .form-panel.active {
+    display:block;
+    animation: panelIn .35s cubic-bezier(.22,1,.36,1);
+  }
+  @keyframes panelIn {
+    from { opacity:0; transform:translateX(18px); }
+    to   { opacity:1; transform:translateX(0); }
+  }
+
+  /* ── Inputs ── */
+  .form-label { color:rgba(255,255,255,.85); font-size:.82rem; font-weight:600; margin-bottom:5px; }
+
+  .input-group-text {
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.2);
+    color:rgba(255,255,255,.7);
+  }
+  .form-control, .form-select {
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.2);
+    color:#fff;
+    transition:background .25s, border-color .25s, box-shadow .25s;
+  }
+  .form-control:focus, .form-select:focus {
+    background:rgba(255,255,255,.15);
+    border-color:rgba(255,255,255,.6);
+    box-shadow:0 0 0 3px rgba(108,99,255,.35);
+    color:#fff;
+  }
+  .form-control::placeholder { color:rgba(255,255,255,.38); }
+  .form-control[type="date"]::-webkit-calendar-picker-indicator { filter:invert(1) opacity(.5); }
+  .form-select option { background:#302b63; color:#fff; }
+  .form-control:-webkit-autofill,
+  .form-control:-webkit-autofill:focus {
+    -webkit-text-fill-color:#fff;
+    -webkit-box-shadow:0 0 0 1000px rgba(48,43,99,.6) inset;
+  }
+
+  /* ── Password toggle ── */
+  .btn-eye {
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.2);
+    color:rgba(255,255,255,.6);
+    cursor:pointer;
+    transition:color .2s;
+  }
+  .btn-eye:hover { color:#fff; }
+
+  /* ── Submit button ── */
+  .btn-auth {
+    background:linear-gradient(135deg,#fff,rgba(255,255,255,.82));
+    color:#4a3f9f;
+    border:none;
+    border-radius:14px;
+    padding:13px;
+    font-weight:700;
+    font-size:.97rem;
+    transition:transform .25s, box-shadow .25s;
+    box-shadow:0 6px 20px rgba(0,0,0,.25);
+  }
+  .btn-auth:hover { transform:translateY(-3px); box-shadow:0 12px 32px rgba(0,0,0,.35); color:#3d33a0; }
+  .btn-auth:active { transform:translateY(0); }
+  .btn-auth:disabled { opacity:.7; cursor:not-allowed; transform:none; }
+
+  /* ── Toggle link ── */
+  .toggle-link {
+    color:rgba(255,255,255,.9);
+    font-weight:700;
+    text-decoration:none;
+    border-bottom:1px dashed rgba(255,255,255,.5);
+    transition:color .2s, border-color .2s;
+  }
+  .toggle-link:hover { color:#fff; border-bottom-color:#fff; }
+
+  /* ── Password strength ── */
+  .strength-bar { height:4px; border-radius:2px; transition:width .4s; }
+
+  /* ── Divider ── */
+  .divider {
+    display:flex;align-items:center;gap:12px;
+    color:rgba(255,255,255,.35);font-size:.78rem;
+    margin:4px 0;
+  }
+  .divider::before,.divider::after {
+    content:'';flex:1;
+    border-top:1px solid rgba(255,255,255,.15);
+  }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width:5px; }
+  ::-webkit-scrollbar-track { background:rgba(255,255,255,.05); }
+  ::-webkit-scrollbar-thumb { background:rgba(255,255,255,.3); border-radius:3px; }
+</style>
+</head>
+<body>
+
+<div class="orb o1"></div>
+<div class="orb o2"></div>
+<div class="orb o3"></div>
+
+<!-- Toast -->
+<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index:9999">
+  <div id="toast" class="toast align-items-center text-white border-0" role="alert">
+    <div class="d-flex">
+      <div class="toast-body fw-semibold" id="toast-msg"></div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+    </div>
+  </div>
+</div>
+
+<div class="auth-card">
+
+  <!-- Brand -->
+  <div class="text-center mb-4">
+    <div class="brand-icon"><i class="bi bi-people-fill"></i></div>
+    <div class="brand-title">UserSystem</div>
+    <div class="brand-sub mt-1">Gerenciamento de usuários</div>
+  </div>
+
+  <!-- ═══ LOGIN PANEL ═══ -->
+  <div class="form-panel active" id="panel-login">
+    <p class="text-center mb-4" style="color:rgba(255,255,255,.6);font-size:.9rem;">Entre com suas credenciais</p>
+    <form id="form-login" novalidate autocomplete="off">
+
+      <div class="mb-3">
+        <label class="form-label">Usuário</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-person-fill"></i></span>
+          <input id="l-user" type="text" class="form-control" placeholder="seu_usuario" required>
+        </div>
+      </div>
+
+      <div class="mb-4">
+        <label class="form-label">Senha</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+          <input id="l-pass" type="password" class="form-control" placeholder="••••••••" required>
+          <button type="button" class="btn-eye input-group-text" onclick="togglePwd('l-pass',this)">
+            <i class="bi bi-eye"></i>
+          </button>
+        </div>
+      </div>
+
+      <button type="submit" id="btn-login" class="btn btn-auth w-100 mb-3">
+        <span class="btn-txt"><i class="bi bi-box-arrow-in-right me-2"></i>Entrar</span>
+        <span class="btn-spin d-none"><span class="spinner-border spinner-border-sm me-2"></span>Entrando…</span>
+      </button>
+    </form>
+
+    <p class="text-center mb-0" style="color:rgba(255,255,255,.6);font-size:.88rem;">
+      Não tem conta? <a href="#" class="toggle-link" onclick="showPanel('register');return false;">Cadastre-se</a>
+    </p>
+  </div>
+
+  <!-- ═══ REGISTER PANEL ═══ -->
+  <div class="form-panel" id="panel-register">
+    <p class="text-center mb-3" style="color:rgba(255,255,255,.6);font-size:.9rem;">Crie sua conta grátis</p>
+    <form id="form-register" novalidate autocomplete="off">
+
+      <div class="row g-2 mb-2">
+        <div class="col-7">
+          <label class="form-label">Usuário</label>
+          <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-at"></i></span>
+            <input id="r-user" type="text" class="form-control" placeholder="usuario" required>
+          </div>
+        </div>
+        <div class="col-5">
+          <label class="form-label">Gênero</label>
+          <select id="r-genero" class="form-select" required>
+            <option value="" disabled selected>—</option>
+            <option value="Masculino">Masculino</option>
+            <option value="Feminino">Feminino</option>
+            <option value="Outro">Outro</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="mb-2">
+        <label class="form-label">Nome Completo</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-person-badge-fill"></i></span>
+          <input id="r-nome" type="text" class="form-control" placeholder="Seu nome completo" required>
+        </div>
+      </div>
+
+      <div class="mb-2">
+        <label class="form-label">E-mail</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-envelope-fill"></i></span>
+          <input id="r-email" type="email" class="form-control" placeholder="email@exemplo.com" required>
+        </div>
+      </div>
+
+      <div class="mb-2">
+        <label class="form-label">Data de Nascimento</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-calendar-date-fill"></i></span>
+          <input id="r-data" type="date" class="form-control" required>
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Senha</label>
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-shield-lock-fill"></i></span>
+          <input id="r-pass" type="password" class="form-control" placeholder="Mínimo 6 caracteres" required minlength="6">
+          <button type="button" class="btn-eye input-group-text" onclick="togglePwd('r-pass',this)">
+            <i class="bi bi-eye"></i>
+          </button>
+        </div>
+        <div id="strength-wrap" class="mt-2 d-none">
+          <div class="d-flex align-items-center gap-2">
+            <div class="progress flex-grow-1" style="height:4px;background:rgba(255,255,255,.12);">
+              <div id="strength-bar" class="strength-bar bg-danger" style="width:0%"></div>
+            </div>
+            <small id="strength-label" style="font-size:.73rem;min-width:72px;color:rgba(255,255,255,.7)"></small>
+          </div>
+        </div>
+      </div>
+
+      <button type="submit" id="btn-register" class="btn btn-auth w-100 mb-3">
+        <span class="btn-txt"><i class="bi bi-person-plus-fill me-2"></i>Criar Conta</span>
+        <span class="btn-spin d-none"><span class="spinner-border spinner-border-sm me-2"></span>Criando…</span>
+      </button>
+    </form>
+
+    <p class="text-center mb-0" style="color:rgba(255,255,255,.6);font-size:.88rem;">
+      Já tem conta? <a href="#" class="toggle-link" onclick="showPanel('login');return false;">Entrar</a>
+    </p>
+  </div>
+
+</div><!-- /auth-card -->
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+/* ── Helpers ── */
+function showPanel(name) {
+  document.querySelectorAll('.form-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+}
+
+function togglePwd(id, btn) {
+  const inp = document.getElementById(id);
+  const ico = btn.querySelector('i');
+  if (inp.type === 'password') { inp.type='text'; ico.className='bi bi-eye-slash'; }
+  else { inp.type='password'; ico.className='bi bi-eye'; }
+}
+
+function toast(msg, ok=true) {
+  const el = document.getElementById('toast');
+  el.className = 'toast align-items-center text-white border-0 bg-' + (ok ? 'success' : 'danger');
+  document.getElementById('toast-msg').textContent = msg;
+  bootstrap.Toast.getOrCreateInstance(el, {delay: 3200}).show();
+}
+
+function setLoading(btnId, on) {
+  const b = document.getElementById(btnId);
+  b.querySelector('.btn-txt').classList.toggle('d-none', on);
+  b.querySelector('.btn-spin').classList.toggle('d-none', !on);
+  b.disabled = on;
+}
+
+/* ── Password strength ── */
+document.getElementById('r-pass').addEventListener('input', function () {
+  const v = this.value;
+  const wrap = document.getElementById('strength-wrap');
+  if (!v) { wrap.classList.add('d-none'); return; }
+  wrap.classList.remove('d-none');
+  let s = 0;
+  if (v.length >= 6) s++;
+  if (v.length >= 10) s++;
+  if (/[A-Z]/.test(v)) s++;
+  if (/[0-9]/.test(v)) s++;
+  if (/[^A-Za-z0-9]/.test(v)) s++;
+  const levels = [
+    ['Muito fraca','danger'],['Fraca','warning'],['Razoável','warning'],
+    ['Boa','info'],['Forte','success']
+  ];
+  const [lbl, color] = levels[Math.min(s, 4)];
+  const bar = document.getElementById('strength-bar');
+  bar.style.width = (s / 5 * 100) + '%';
+  bar.className = 'strength-bar bg-' + color;
+  const sl = document.getElementById('strength-label');
+  sl.textContent = lbl;
+  sl.style.color = '';
+});
+
+/* ── Login ── */
+document.getElementById('form-login').addEventListener('submit', async e => {
+  e.preventDefault();
+  const usuario = document.getElementById('l-user').value.trim();
+  const senha   = document.getElementById('l-pass').value;
+  if (!usuario || !senha) { toast('Preencha todos os campos', false); return; }
+  setLoading('btn-login', true);
+  try {
+    const r = await fetch('/api/login', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({usuario, senha})
+    });
+    const d = await r.json();
+    if (d.success) { toast('Login realizado! Redirecionando…'); setTimeout(() => location.href='/admin', 900); }
+    else { toast(d.message, false); setLoading('btn-login', false); }
+  } catch { toast('Erro de conexão', false); setLoading('btn-login', false); }
+});
+
+/* ── Register ── */
+document.getElementById('form-register').addEventListener('submit', async e => {
+  e.preventDefault();
+  const payload = {
+    usuario:        document.getElementById('r-user').value.trim(),
+    nome_completo:  document.getElementById('r-nome').value.trim(),
+    email:          document.getElementById('r-email').value.trim(),
+    data_nascimento:document.getElementById('r-data').value,
+    genero:         document.getElementById('r-genero').value,
+    senha:          document.getElementById('r-pass').value,
+  };
+  if (Object.values(payload).some(v => !v)) { toast('Preencha todos os campos', false); return; }
+  if (payload.senha.length < 6) { toast('Senha deve ter mínimo 6 caracteres', false); return; }
+  setLoading('btn-register', true);
+  try {
+    const r = await fetch('/api/register', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    });
+    const d = await r.json();
+    if (d.success) { toast('Conta criada com sucesso!'); setTimeout(() => location.href='/admin', 900); }
+    else { toast(d.message, false); setLoading('btn-register', false); }
+  } catch { toast('Erro de conexão', false); setLoading('btn-register', false); }
+});
+</script>
+</body>
+</html>
