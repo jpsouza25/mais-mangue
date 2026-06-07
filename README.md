@@ -1,111 +1,172 @@
-# CRUD Simples em Python
+# 🦀 +Mangue
 
-Aplicação web de gerenciamento de usuários desenvolvida com **Flask** e **SQLite**. Permite cadastrar, listar, editar e deletar usuários por meio de uma interface web com autenticação por sessão. Também possui uma interface de linha de comando (CLI) para operações diretas no banco.
+> Plataforma ambiental de preservação dos **manguezais urbanos do Recife** — Pernambuco, Brasil.
+> Conecta cidadãos, voluntários e empresas em torno da recuperação dos manguezais. **ODS 13**.
 
-## Funcionalidades
+O projeto é dividido em duas partes que rodam juntas:
 
-- Cadastro e login de usuários com autenticação por sessão
-- Senhas armazenadas com hash PBKDF2-SHA256 + salt
-- CRUD completo: criar, listar, editar e deletar usuários
-- Interface web responsiva (Flask + Jinja2)
-- Interface CLI interativa via terminal
+| Parte | Tecnologia | Pasta | Porta |
+| --- | --- | --- | --- |
+| **Frontend** | React + Vite + TypeScript + Tailwind | [`frontend/`](frontend/) | `5173` |
+| **Backend** | Python + Flask + SQLite | [`backend/`](backend/) | `5000` |
 
-## Tecnologias
+O Vite faz **proxy** das chamadas `/api/*` para o Flask, então o navegador usa uma
+única origem (`localhost:5173`) e o cookie de sessão funciona normalmente.
 
-- Python 3.10+
-- Flask
-- SQLite3 (embutido no Python, sem instalação extra)
+---
 
-## Estrutura do Projeto
+## 📸 Telas
 
-```
-.
-├── app.py           # Servidor Flask e rotas da API REST
-├── crud.py          # Lógica de banco de dados e menu CLI
-├── requirements.txt # Dependências do projeto
-└── templates/
-    ├── login.html   # Página de login/cadastro
-    └── admin.html   # Painel de gerenciamento de usuários
-```
+### Landing page
+![Landing](docs/screenshots/01-landing.jpg)
 
-## Instalação e Configuração
+### Login e Cadastro (integrados ao backend)
+| Entrar | Criar conta |
+| --- | --- |
+| ![Login](docs/screenshots/02-login.jpg) | ![Cadastro](docs/screenshots/03-cadastro.jpg) |
 
-### 1. Pré-requisitos
+### Dashboard do usuário (com a Área do Desenvolvedor)
+![Dashboard](docs/screenshots/04-dashboard.jpg)
 
-- Python 3.10 ou superior instalado
-- pip (gerenciador de pacotes do Python)
+### Gerenciar Usuários — CRUD completo
+| Listagem | Edição |
+| --- | --- |
+| ![Usuários](docs/screenshots/05-usuarios.jpg) | ![Editar](docs/screenshots/06-editar.jpg) |
 
-### 2. Clone o repositório
+---
 
-```bash
-git clone https://github.com/jpsouza25/crud-simples-em-python.git
-cd crud-simples-em-python
-```
+## ✨ Funcionalidades
 
-### 3. Crie e ative um ambiente virtual (recomendado)
+**Landing page**
+- Navbar fixa com efeito blur e estado de sessão (mostra **"Meu Painel"** quando logado).
+- Hero em carrossel (autoplay) com chamadas para população e empresas.
+- Seção "Você sabia?" sobre a importância dos manguezais.
+- **Mapa interativo** (Leaflet) com 11 áreas de manguezal de Pernambuco, polígonos,
+  legenda e painel de detalhes.
+- Seção "Por que usar o +Mangue" com os produtos App e Plataforma.
+- Ondas SVG orgânicas separando as seções e animações sutis.
 
-```bash
-# Linux / macOS
-python3 -m venv venv
-source venv/bin/activate
+**Autenticação (conectada ao Flask)**
+- Login por **usuário _ou_ e-mail** + senha, com mostrar/ocultar senha.
+- Cadastro completo (usuário, nome, e-mail, data de nascimento, gênero, senha).
+- Sessão por cookie; ao entrar/cadastrar o usuário vai para o dashboard.
 
-# Windows
-python -m venv venv
-venv\Scripts\activate
-```
+**Dashboard do usuário** (`/dashboard`)
+- Saudação personalizada, cards de impacto e ações rápidas.
+- **Área do Desenvolvedor** → atalho para o painel de Gerenciar Usuários.
 
-### 4. Instale as dependências
+**Gerenciar Usuários** (`/dashboard/usuarios`) — o CRUD
+- Estatísticas (total e por gênero), busca, ordenação por coluna e paginação.
+- Criar (via cadastro), **editar**, **redefinir senha** e **excluir** usuários.
+- Proteção: não é possível excluir o próprio usuário logado.
 
-```bash
-pip install -r requirements.txt
-```
+**Segurança**
+- Senhas com hash **PBKDF2-HMAC-SHA256** + salt aleatório por usuário.
+- Rotas de dados protegidas por sessão (401 sem login).
 
-## Como Rodar
+---
 
-### Modo Web (Flask)
+## 🚀 Como rodar
 
-```bash
-python app.py
-```
+> Pré-requisitos: **Node.js 18+** e **Python 3.10+**. São necessários **2 terminais**.
 
-Acesse no navegador: [http://localhost:5000](http://localhost:5000)
-
-Na primeira execução, o banco de dados `database.db` será criado automaticamente. Cadastre um novo usuário pela tela de login para começar.
-
-### Modo CLI (Terminal)
+### 1. Backend (Flask) — porta 5000
 
 ```bash
-python crud.py
+cd backend
+python3 -m venv .venv                 # cria o ambiente virtual
+source .venv/bin/activate             # Windows: .venv\Scripts\activate
+pip install -r requirements.txt       # instala o Flask
+python app.py                         # inicia a API em http://localhost:5000
 ```
 
-Exibe um menu interativo no terminal com as opções de CRUD:
+### 2. Frontend (React) — porta 5173
 
-```
-=== CRUD de Usuários ===
-  [1] Listar usuários
-  [2] Buscar usuário por ID
-  [3] Criar usuário
-  [4] Atualizar usuário
-  [5] Alterar senha
-  [6] Verificar senha
-  [7] Deletar usuário
-  [0] Sair
+Em **outro terminal**:
+
+```bash
+cd frontend
+npm install                           # instala as dependências
+npm run dev                           # inicia o app em http://localhost:5173
 ```
 
-## Rotas da API
+### 3. Acesse
 
-| Método | Rota                          | Descrição                        |
-|--------|-------------------------------|----------------------------------|
-| POST   | `/api/login`                  | Autenticar usuário               |
-| POST   | `/api/register`               | Cadastrar novo usuário           |
-| GET    | `/api/users`                  | Listar todos os usuários         |
-| PUT    | `/api/users/<id>`             | Atualizar dados do usuário       |
-| DELETE | `/api/users/<id>`             | Deletar usuário                  |
-| PUT    | `/api/users/<id>/password`    | Alterar senha do usuário         |
+Abra **<http://localhost:5173>** no navegador, crie uma conta e explore.
+O banco `backend/database.db` é criado automaticamente na primeira execução.
 
-> As rotas da API (exceto login e register) requerem sessão ativa.
+---
 
-## Observações
+## 🔌 API do backend
 
-- O arquivo `database.db` é gerado automaticamente na raiz do projeto e está listado no `.gitignore`.
-- A `secret_key` da sessão Flask é gerada aleatoriamente a cada inicialização. Para produção, defina uma chave fixa via variável de ambiente.
+Todas as rotas retornam JSON. As de dados exigem sessão ativa (cookie).
+
+| Método | Rota | Descrição |
+| --- | --- | --- |
+| `POST` | `/api/register` | cria usuário e inicia a sessão |
+| `POST` | `/api/login` | autentica por usuário **ou** e-mail + senha |
+| `POST` | `/api/logout` | encerra a sessão |
+| `GET` | `/api/me` | retorna o usuário logado (401 se não houver sessão) |
+| `GET` | `/api/users` | lista todos os usuários |
+| `PUT` | `/api/users/<id>` | atualiza os dados de um usuário |
+| `PUT` | `/api/users/<id>/password` | redefine a senha |
+| `DELETE` | `/api/users/<id>` | remove um usuário |
+
+---
+
+## 📂 Estrutura
+
+```
++mangue/
+├── backend/                  # API Flask + SQLite
+│   ├── app.py                # rotas /api
+│   ├── crud.py               # acesso ao banco (CRUD + hash de senha)
+│   ├── requirements.txt
+│   └── database.db           # gerado automaticamente (ignorado pelo git)
+│
+├── frontend/                 # App React + Vite
+│   ├── index.html
+│   ├── vite.config.ts        # plugins + proxy /api -> :5000
+│   ├── tsconfig.json
+│   ├── package.json
+│   └── src/
+│       ├── main.tsx          # entrada + BrowserRouter
+│       ├── app/
+│       │   ├── App.tsx       # rotas
+│       │   ├── pages/        # LandingPage, Dashboard, UserManagement
+│       │   ├── components/   # Navbar, HeroCarousel, modais, mapa, dashboard/...
+│       │   ├── hooks/        # useAuth (proteção de rota)
+│       │   └── lib/          # api.ts (cliente Flask), theme.ts (paleta)
+│       ├── imports/          # logos
+│       └── styles/           # fontes, tailwind, tema
+│
+├── docs/screenshots/         # imagens do README
+├── ATTRIBUTIONS.md
+└── README.md
+```
+
+---
+
+## 🎨 Design system
+
+| Token | Cor | Uso |
+| --- | --- | --- |
+| Verde escuro | `#404925` | primária |
+| Verde oliva | `#A4AA7F` | apoio |
+| Azul | `#6C94B4` | destaque |
+| Lima | `#AFB11C` | acento |
+| Creme | `#F1F4E0` | superfícies |
+| Fundo | `#F8FAF0` | geral |
+
+Tipografia: **Lora** (títulos) + **Work Sans** (corpo).
+
+---
+
+## 🛠️ Scripts úteis (frontend)
+
+```bash
+npm run dev        # servidor de desenvolvimento
+npm run build      # build de produção (gera dist/)
+npm run preview    # serve o build localmente
+npm run typecheck  # checagem de tipos TypeScript
+```

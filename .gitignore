@@ -1,19 +1,38 @@
-# Banco de dados
-database.db
+# ───────────── Frontend (React / Vite) ─────────────
+node_modules/
+dist/
+.vite/
+*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-# Cache Python
+# ───────────── Backend (Python / Flask) ─────────────
 __pycache__/
 *.py[cod]
 *.pyo
-
-# Ambiente virtual
 venv/
 .venv/
 env/
 
-# Variáveis de ambiente
+# Banco de dados SQLite (gerado automaticamente ao rodar o backend)
+database.db
+*.sqlite3
+
+# ───────────── Geral ─────────────
 .env
+.env.*
+.DS_Store
+Thumbs.db
 
 # IDEs
 .vscode/
 .idea/
+*.swp
+
+# Cookies / credenciais (curl)
+cj.txt
+*.cookies
+
+# Documentos avulsos (prints, relatórios)
+*.docx

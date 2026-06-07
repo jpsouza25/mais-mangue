@@ -1,54 +1,27 @@
-import secrets
-from flask import Flask, render_template, request, jsonify, session, redirect, url_for
+"""API REST do +Mangue (Flask + SQLite).
+
+Serve apenas JSON em /api/* — a interface é o app React (frontend/), que acessa
+estas rotas através do proxy do Vite. A autenticação usa sessão por cookie.
+"""
+import os
+from flask import Flask, request, jsonify, session
+
 import crud
 
 app = Flask(__name__)
-app.secret_key = secrets.token_hex(32)
+app.secret_key = os.environ.get("SECRET_KEY", "dev-mais-mangue-troque-em-producao")
 
 crud.create_table()
 
 
 @app.route("/")
 def index():
-    return redirect(url_for("admin") if "user_id" in session else url_for("login_page"))
-
-
-@app.route("/login")
-def login_page():
-    if "user_id" in session:
-        return redirect(url_for("admin"))
-    return render_template("login.html")
-
-
-@app.route("/admin")
-def admin():
-    if "user_id" not in session:
-        return redirect(url_for("login_page"))
-    return render_template("admin.html", usuario=session.get("usuario"))
-
-
-@app.route("/logout")
-def logout():
-    session.clear()
-    return redirect(url_for("login_page"))
-
-
-@app.route("/api/login", methods=["POST"])
-def api_login():
-    data = request.json
-    user = crud.buscar_por_usuario(data.get("usuario", ""))
-    if not user:
-        return jsonify({"success": False, "message": "Usuário não encontrado"})
-    if not crud.verificar_senha(user["id"], data.get("senha", "")):
-        return jsonify({"success": False, "message": "Senha incorreta"})
-    session["user_id"] = user["id"]
-    session["usuario"] = user["usuario"]
-    return jsonify({"success": True})
+    return jsonify({"app": "+Mangue API", "status": "ok"})
 
 
 @app.route("/api/register", methods=["POST"])
 def api_register():
-    data = request.json
+    data = request.json or {}
     try:
         uid = crud.criar_usuario(
             data["usuario"], data["nome_completo"], data["email"],
@@ -62,18 +35,53 @@ def api_register():
         return jsonify({"success": False, "message": msg})
 
 
+@app.route("/api/login", methods=["POST"])
+def api_login():
+    data = request.json or {}
+    identificador = (data.get("usuario", "") or "").strip()
+    user = crud.buscar_por_login(identificador)
+    if not user:
+        return jsonify({"success": False, "message": "Usuário não encontrado"})
+    if not crud.verificar_senha(user["id"], data.get("senha", "")):
+        return jsonify({"success": False, "message": "Senha incorreta"})
+    session["user_id"] = user["id"]
+    session["usuario"] = user["usuario"]
+    return jsonify({"success": True})
+
+
+@app.route("/api/logout", methods=["POST"])
+def api_logout():
+    session.clear()
+    return jsonify({"success": True})
+
+
+@app.route("/api/me")
+def api_me():
+    if "user_id" not in session:
+        return jsonify({"authenticated": False}), 401
+    user = crud.buscar_usuario(session["user_id"])
+    if not user:
+        session.clear()
+        return jsonify({"authenticated": False}), 401
+    return jsonify({"authenticated": True, "user": user})
+
+
+def _require_login():
+    return "user_id" in session
+
+
 @app.route("/api/users", methods=["GET"])
 def api_users():
-    if "user_id" not in session:
+    if not _require_login():
         return jsonify({"error": "Não autorizado"}), 401
     return jsonify(crud.listar_usuarios())
 
 
 @app.route("/api/users/<int:uid>", methods=["PUT"])
 def api_update_user(uid):
-    if "user_id" not in session:
+    if not _require_login():
         return jsonify({"error": "Não autorizado"}), 401
-    data = request.json
+    data = request.json or {}
     try:
         ok = crud.atualizar_usuario(
             uid, data["usuario"], data["nome_completo"],
@@ -87,16 +95,16 @@ def api_update_user(uid):
 
 @app.route("/api/users/<int:uid>", methods=["DELETE"])
 def api_delete_user(uid):
-    if "user_id" not in session:
+    if not _require_login():
         return jsonify({"error": "Não autorizado"}), 401
     return jsonify({"success": crud.deletar_usuario(uid)})
 
 
 @app.route("/api/users/<int:uid>/password", methods=["PUT"])
 def api_update_password(uid):
-    if "user_id" not in session:
+    if not _require_login():
         return jsonify({"error": "Não autorizado"}), 401
-    data = request.json
+    data = request.json or {}
     return jsonify({"success": crud.atualizar_senha(uid, data["senha"])})
 
 
