@@ -1,8 +1,3 @@
-"""API REST do +Mangue (Flask + SQLite).
-
-Serve apenas JSON em /api/* — a interface é o app React (frontend/), que acessa
-estas rotas através do proxy do Vite. A autenticação usa sessão por cookie.
-"""
 import os
 from flask import Flask, request, jsonify, session
 
